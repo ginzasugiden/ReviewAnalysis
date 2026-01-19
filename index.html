@@ -987,7 +987,11 @@
     // API呼び出し関数
     // ============================================
     async function callApi(action, params = {}) {
-      const payload = { action, ...params };
+      const payload = { 
+        action, 
+        ...params,
+        _referer: window.location.href  // リファラー情報を追加
+      };
       
       try {
         const response = await fetch(API_BASE_URL, {
@@ -999,6 +1003,12 @@
         });
         
         const data = await response.json();
+        
+        // ドメイン認証エラーのチェック
+        if (data.code === 'UNAUTHORIZED_DOMAIN') {
+          throw new Error('このドメインからのアクセスは許可されていません');
+        }
+        
         return data;
       } catch (err) {
         console.error('API Error:', err);
