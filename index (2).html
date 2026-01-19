@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>楽天レビュー AI分析システム</title>
+  <meta name="description" content="AIがレビューの深層を読み解き、改善提案を生成">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container { max-width: 960px; margin: 0 auto; }
+    
+    .header {
+      background: linear-gradient(135deg, #e94560 0%, #0f3460 100%);
+      color: white;
+      padding: 35px;
+      border-radius: 20px;
+      text-align: center;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 40px rgba(233,69,96,0.3);
+    }
+    
+    .header h1 { font-size: 26px; margin-bottom: 10px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+    .header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    
+    .usage-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .usage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .usage-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .usage-shop {
+      font-size: 12px;
+      color: #888;
+      background: #f0f0f0;
+      padding: 4px 12px;
+      border-radius: 12px;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .usage-shop.detected {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .shop-name {
+      font-weight: bold;
+    }
+    
+    .usage-bars {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .usage-bar-item {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 10px;
+    }
+    
+    .usage-bar-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .usage-bar-bg {
+      background: #e0e0e0;
+      border-radius: 6px;
+      height: 8px;
+      overflow: hidden;
+    }
+    
+    .usage-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.3s;
+    }
+    
+    .usage-bar-fill.safe { background: #27ae60; }
+    .usage-bar-fill.warning { background: #f39c12; }
+    .usage-bar-fill.danger { background: #e74c3c; }
+    
+    .drop-zone {
+      background: white;
+      border: 3px dashed #ccc;
+      border-radius: 20px;
+      padding: 60px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 25px;
+    }
+    
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #e94560;
+      background: #fff5f7;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(233,69,96,0.15);
+    }
+    
+    .drop-zone.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    .drop-zone-icon { font-size: 55px; margin-bottom: 15px; }
+    .drop-zone-text { color: #555; font-size: 17px; margin-bottom: 8px; }
+    .drop-zone-hint { color: #999; font-size: 13px; }
+    
+    .limit-warning {
+      background: #fff3e0;
+      border: 1px solid #ffcc02;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .limit-warning.show { display: block; }
+    .limit-warning-text {
+      font-size: 14px;
+      color: #e65100;
+    }
+    
+    .loading {
+      display: none;
+      background: white;
+      border-radius: 20px;
+      padding: 60px;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .loading.show { display: block; }
+    
+    .spinner {
+      width: 50px; height: 50px;
+      border: 4px solid #f0f0f0;
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .loading-text { color: #666; font-size: 15px; }
+    .loading-sub { color: #999; font-size: 13px; margin-top: 8px; }
+    .loading-time {
+      font-size: 36px;
+      font-weight: bold;
+      color: #e94560;
+      margin-bottom: 15px;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .progress-container {
+      margin-top: 20px;
+      display: none;
+    }
+    .progress-container.show { display: block; }
+    
+    .progress-bar-bg {
+      background: #e0e0e0;
+      border-radius: 10px;
+      height: 20px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    
+    .progress-bar {
+      background: linear-gradient(90deg, #e94560, #667eea);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 10px;
+    }
+    
+    .progress-text { font-size: 14px; color: #666; }
+    .progress-detail { font-size: 12px; color: #999; margin-top: 5px; }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .card-title {
+      font-size: 17px;
+      font-weight: bold;
+      color: #1a1a2e;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .summary-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .summary-headline {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+    
+    .summary-text {
+      font-size: 14px;
+      opacity: 0.95;
+      line-height: 1.7;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-box {
+      flex: 1;
+      min-width: 100px;
+      background: linear-gradient(135deg, #e94560, #0f3460);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .stat-value { font-size: 32px; font-weight: bold; }
+    .stat-label { font-size: 12px; opacity: 0.9; margin-top: 5px; }
+    
+    .sentiment-bar {
+      display: flex;
+      height: 35px;
+      border-radius: 18px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    
+    .sentiment-seg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    
+    .sentiment-pos { background: #27ae60; }
+    .sentiment-neu { background: #95a5a6; }
+    .sentiment-neg { background: #e74c3c; }
+    
+    .insight-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 15px;
+      border-left: 4px solid #27ae60;
+    }
+    
+    .insight-item.concern { border-left-color: #e67e22; }
+    .insight-item.concern.high { border-left-color: #e74c3c; background: #fff8f8; }
+    
+    .insight-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .insight-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .insight-icon.good { background: #e8f5e9; color: #27ae60; }
+    .insight-icon.warn { background: #fff3e0; color: #e67e22; }
+    .insight-icon.bad { background: #ffebee; color: #e74c3c; }
+    
+    .insight-title { font-weight: bold; font-size: 15px; color: #333; }
+    .insight-freq {
+      margin-left: auto;
+      background: #e0e0e0;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .insight-detail { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 10px; }
+    
+    .insight-quote {
+      background: white;
+      border-left: 3px solid #ddd;
+      padding: 10px 15px;
+      font-size: 13px;
+      color: #666;
+      font-style: italic;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .indirect-badge {
+      display: inline-block;
+      background: #fff3e0;
+      color: #e67e22;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+    
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    
+    .insight-box {
+      background: #f8f9fa;
+      padding: 18px;
+      border-radius: 12px;
+    }
+    
+    .insight-box-title { font-size: 13px; color: #888; margin-bottom: 10px; }
+    .insight-box-content { font-size: 14px; color: #333; line-height: 1.6; }
+    
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    
+    .tag {
+      background: #e8f4fd;
+      color: #1976d2;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+    }
+    
+    .recommendation {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 15px;
+      border-left: 4px solid #95a5a6;
+    }
+    
+    .recommendation.high { border-left-color: #e74c3c; }
+    .recommendation.medium { border-left-color: #f39c12; }
+    .recommendation.low { border-left-color: #27ae60; }
+    
+    .rec-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .rec-priority {
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: white;
+      font-weight: bold;
+    }
+    
+    .rec-priority.high { background: #e74c3c; }
+    .rec-priority.medium { background: #f39c12; }
+    .rec-priority.low { background: #27ae60; }
+    
+    .rec-category {
+      background: #e0e0e0;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      color: #666;
+    }
+    
+    .rec-title { font-weight: bold; font-size: 15px; color: #333; margin-bottom: 8px; }
+    .rec-action { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 8px; }
+    .rec-impact {
+      font-size: 12px;
+      color: #888;
+      background: #f0f0f0;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    
+    .marketing-section { margin-bottom: 20px; }
+    .marketing-title { font-size: 14px; color: #666; margin-bottom: 10px; font-weight: 500; }
+    
+    .quote-card {
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #5d4037;
+      position: relative;
+    }
+    
+    .quote-card::before {
+      content: '"';
+      font-size: 40px;
+      position: absolute;
+      top: 5px;
+      left: 10px;
+      opacity: 0.3;
+    }
+    
+    .keyword-tag {
+      background: #e94560;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: inline-block;
+      margin: 4px;
+    }
+    
+    .review-item {
+      padding: 18px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .review-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .review-stars { color: #f1c40f; font-size: 15px; }
+    .review-date { color: #999; font-size: 12px; }
+    .review-title { font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #333; }
+    .review-body { font-size: 13px; color: #555; line-height: 1.7; }
+    
+    .review-pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .page-btn {
+      padding: 8px 16px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .page-btn:hover { background: #e0e0e0; }
+    .page-btn.active { background: #e94560; color: white; }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .reset-btn {
+      flex: 1;
+      padding: 16px;
+      background: white;
+      color: #e94560;
+      border: 2px solid #e94560;
+      border-radius: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+    
+    .reset-btn:hover {
+      background: #e94560;
+      color: white;
+    }
+    
+    .pdf-btn {
+      flex: 1;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+    
+    .pdf-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102,126,234,0.4);
+    }
+    
+    .pdf-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error.show { display: block; }
+    
+    .report { display: none; }
+    .report.show { display: block; }
+    
+    #fileInput { display: none; }
+    
+    .api-notice {
+      background: #fff3e0;
+      border: 1px solid #ffcc02;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    .api-notice.show { display: block; }
+    
+    .api-notice h3 {
+      color: #e65100;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    
+    .pdf-header {
+      display: none;
+      background: linear-gradient(135deg, #e94560 0%, #0f3460 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .pdf-header h2 { font-size: 22px; margin-bottom: 8px; }
+    .pdf-header p { font-size: 13px; opacity: 0.9; }
+    
+    .data-info {
+      background: #e3f2fd;
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .data-info.show { display: block; }
+    .data-info-text { font-size: 14px; color: #1565c0; }
+    
+    .connection-status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    .connection-status.connected {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .connection-status.disconnected {
+      background: #ffebee;
+      color: #c62828;
+    }
+    .connection-status.checking {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    @media (max-width: 600px) {
+      .usage-bars { grid-template-columns: 1fr; }
+      .stats-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="connection-status checking" id="connectionStatus">🔄 接続確認中...</div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🔍 楽天レビュー AI分析システム</h1>
+      <p>AIがレビューの深層を読み解き、改善提案を生成</p>
+      <div class="badge">Powered by AI Technology</div>
+      <div class="badge">Created by とみぃ＠銀座東京フラワー</div>
+    </div>
+    
+    <!-- 利用状況カード -->
+    <div class="usage-card" id="usageCard">
+      <div class="usage-header">
+        <div class="usage-title">📊 本日の利用状況</div>
+        <div class="usage-shop" id="usageShop">店舗ID: CSVアップロード後に表示</div>
+      </div>
+      <div class="usage-bars">
+        <div class="usage-bar-item">
+          <div class="usage-bar-label">
+            <span>利用回数</span>
+            <span id="usageCountLabel">- / -</span>
+          </div>
+          <div class="usage-bar-bg">
+            <div class="usage-bar-fill safe" id="usageCountBar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="usage-bar-item">
+          <div class="usage-bar-label">
+            <span>レビュー処理数</span>
+            <span id="usageReviewLabel">- / -</span>
+          </div>
+          <div class="usage-bar-bg">
+            <div class="usage-bar-fill safe" id="usageReviewBar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="limit-warning" id="limitWarning">
+      <div class="limit-warning-text" id="limitWarningText"></div>
+    </div>
+    
+    <div class="api-notice" id="apiNotice">
+      <h3>⚠️ システム設定が必要です</h3>
+      <p>管理者に連絡してください。</p>
+    </div>
+    
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">📊</div>
+      <div class="drop-zone-text">レビューCSVをドラッグ＆ドロップ</div>
+      <div class="drop-zone-hint" id="dropZoneHint">RMSからエクスポートしたCSVファイルに対応</div>
+    </div>
+    <input type="file" id="fileInput" accept=".csv">
+    
+    <div class="data-info" id="dataInfo">
+      <div class="data-info-text" id="dataInfoText"></div>
+    </div>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-time" id="loadingTime">0:00</div>
+      <div class="loading-text" id="loadingText">AIが分析中...</div>
+      <div class="loading-sub" id="loadingSub">レビューの深層を読み解いています</div>
+      
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar-bg">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">準備中...</div>
+        <div class="progress-detail" id="progressDetail"></div>
+      </div>
+    </div>
+    
+    <div class="error" id="error"></div>
+    
+    <div class="report" id="report">
+      <div id="pdfContent">
+        <div class="pdf-header" id="pdfHeader">
+          <h2>🔍 楽天レビュー AI分析レポート</h2>
+          <p id="pdfDate"></p>
+        </div>
+        
+        <div class="summary-card" id="summaryCard"></div>
+        
+        <div class="card">
+          <div class="card-title">📈 基本統計</div>
+          <div class="stats-row" id="statsRow"></div>
+          <div id="sentimentBar"></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">✅ 発見された強み</div>
+          <div id="strengthsList"></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">⚠️ 懸念点・改善ポイント</div>
+          <div id="concernsList"></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">👤 顧客インサイト</div>
+          <div id="customerInsights"></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">💡 改善提案</div>
+          <div id="recommendations"></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">📢 マーケティング活用</div>
+          <div id="marketingSuggestions"></div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">📝 レビュー一覧 <span id="reviewCountBadge" style="font-size:12px;color:#888;font-weight:normal;margin-left:auto;"></span></div>
+        <div id="reviewList"></div>
+        <div class="review-pagination" id="reviewPagination"></div>
+      </div>
+      
+      <div class="btn-row">
+        <button class="pdf-btn" id="pdfBtn" onclick="downloadPDF()">📄 レポートをPDFでダウンロード</button>
+        <button class="reset-btn" onclick="reset()">🔄 別のファイルを分析</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // ============================================
+    // 設定 - ここにGAS WebアプリのURLを設定
+    // ============================================
+    const API_BASE_URL = 'YOUR_GAS_WEBAPP_URL_HERE';
+    // 例: 'https://script.google.com/macros/s/AKfycb.../exec'
+    
+    // ============================================
+    // DOM要素
+    // ============================================
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const report = document.getElementById('report');
+    const apiNotice = document.getElementById('apiNotice');
+    const loadingTime = document.getElementById('loadingTime');
+    const loadingText = document.getElementById('loadingText');
+    const loadingSub = document.getElementById('loadingSub');
+    const pdfBtn = document.getElementById('pdfBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressDetail = document.getElementById('progressDetail');
+    const dataInfo = document.getElementById('dataInfo');
+    const dataInfoText = document.getElementById('dataInfoText');
+    const limitWarning = document.getElementById('limitWarning');
+    const limitWarningText = document.getElementById('limitWarningText');
+    const usageShop = document.getElementById('usageShop');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
+    let timerInterval = null;
+    let startTime = null;
+    let allReviews = [];
+    let currentPage = 1;
+    const reviewsPerPage = 20;
+    
+    let currentShopId = null;
+    let currentShopName = null;
+    const CHUNK_SIZE = 200;
+    
+    // ============================================
+    // API呼び出し関数
+    // ============================================
+    async function callApi(action, params = {}) {
+      const payload = { action, ...params };
+      
+      try {
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error('API Error:', err);
+        throw new Error('サーバーとの通信に失敗しました');
+      }
+    }
+    
+    // ============================================
+    // 初期化
+    // ============================================
+    async function init() {
+      // API接続確認
+      try {
+        connectionStatus.className = 'connection-status checking';
+        connectionStatus.textContent = '🔄 接続確認中...';
+        
+        const result = await callApi('ping');
+        
+        if (result.status === 'ok') {
+          connectionStatus.className = 'connection-status connected';
+          connectionStatus.textContent = '✅ 接続済み';
+          setTimeout(() => {
+            connectionStatus.style.display = 'none';
+          }, 3000);
+        }
+        
+        // APIキー確認
+        const keyCheck = await callApi('checkApiKey');
+        if (!keyCheck.hasKey) {
+          apiNotice.classList.add('show');
+          dropZone.classList.add('disabled');
+        }
+        
+      } catch (err) {
+        connectionStatus.className = 'connection-status disconnected';
+        connectionStatus.textContent = '❌ 接続エラー';
+        apiNotice.classList.add('show');
+        apiNotice.innerHTML = '<h3>⚠️ サーバーに接続できません</h3><p>API URLの設定を確認してください。</p>';
+        dropZone.classList.add('disabled');
+      }
+    }
+    
+    init();
+    
+    // ============================================
+    // ユーティリティ関数
+    // ============================================
+    function extractShopIdFromOrderNo(orderNo) {
+      if (!orderNo) return null;
+      const parts = String(orderNo).split('-');
+      if (parts.length >= 1 && /^\d{5,6}$/.test(parts[0])) {
+        return parts[0];
+      }
+      return null;
+    }
+    
+    function extractShopIdFromReviews(reviews) {
+      for (const review of reviews) {
+        if (review.orderNo) {
+          const shopId = extractShopIdFromOrderNo(review.orderNo);
+          if (shopId) return shopId;
+        }
+      }
+      return null;
+    }
+    
+    function updateUsageDisplay(status) {
+      if (!status) return;
+      
+      if (status.shopId) {
+        if (status.shopName) {
+          usageShop.innerHTML = `<span class="shop-name">${esc(status.shopName)}</span> <span style="opacity:0.7">(${status.shopId})</span>`;
+        } else {
+          usageShop.textContent = `店舗ID: ${status.shopId}`;
+        }
+        usageShop.classList.add('detected');
+      } else {
+        usageShop.textContent = '店舗ID: 未検出';
+        usageShop.classList.remove('detected');
+      }
+      
+      const countPercent = (status.todayUsageCount / status.limits.dailyLimit) * 100;
+      document.getElementById('usageCountLabel').textContent = 
+        `${status.todayUsageCount} / ${status.limits.dailyLimit}回`;
+      document.getElementById('usageCountBar').style.width = Math.min(countPercent, 100) + '%';
+      document.getElementById('usageCountBar').className = 
+        'usage-bar-fill ' + getBarClass(countPercent);
+      
+      const reviewPercent = (status.todayReviewCount / status.limits.dailyReviewLimit) * 100;
+      document.getElementById('usageReviewLabel').textContent = 
+        `${status.todayReviewCount} / ${status.limits.dailyReviewLimit}件`;
+      document.getElementById('usageReviewBar').style.width = Math.min(reviewPercent, 100) + '%';
+      document.getElementById('usageReviewBar').className = 
+        'usage-bar-fill ' + getBarClass(reviewPercent);
+      
+      document.getElementById('dropZoneHint').textContent = 
+        `1回最大${status.limits.maxReviewsSingle}件まで処理可能`;
+      
+      limitWarning.classList.remove('show');
+      dropZone.classList.remove('disabled');
+      
+      if (status.remaining.usageCount === 0) {
+        limitWarning.classList.add('show');
+        limitWarningText.textContent = '⚠️ 本日の利用回数上限に達しました。明日以降にご利用ください。';
+        dropZone.classList.add('disabled');
+      } else if (status.remaining.usageCount <= 2) {
+        limitWarning.classList.add('show');
+        limitWarningText.textContent = `⚠️ 本日の利用回数が残り${status.remaining.usageCount}回です`;
+      } else if (status.remaining.reviewCount < 100) {
+        limitWarning.classList.add('show');
+        limitWarningText.textContent = `⚠️ 本日のレビュー処理残数が少なくなっています（残り${status.remaining.reviewCount}件）`;
+      }
+    }
+    
+    function getBarClass(percent) {
+      if (percent >= 90) return 'danger';
+      if (percent >= 70) return 'warning';
+      return 'safe';
+    }
+    
+    function esc(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+    
+    // ============================================
+    // ファイル処理
+    // ============================================
+    ['dragover', 'dragenter'].forEach(e => {
+      dropZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        if (!dropZone.classList.contains('disabled')) {
+          dropZone.classList.add('dragover');
+        }
+      });
+    });
+    
+    ['dragleave', 'drop'].forEach(e => {
+      dropZone.addEventListener(e, () => dropZone.classList.remove('dragover'));
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!dropZone.classList.contains('disabled') && e.dataTransfer.files[0]) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+    
+    dropZone.addEventListener('click', () => {
+      if (!dropZone.classList.contains('disabled')) {
+        fileInput.click();
+      }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) processFile(e.target.files[0]);
+    });
+    
+    async function processFile(file) {
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        showError('CSVファイルを選択してください');
+        return;
+      }
+      
+      dropZone.style.display = 'none';
+      loading.classList.add('show');
+      error.classList.remove('show');
+      dataInfo.classList.remove('show');
+      limitWarning.classList.remove('show');
+      
+      loadingText.textContent = 'ファイルを読み込み中...';
+      loadingSub.textContent = 'CSVデータを解析しています';
+      startTimer();
+      
+      try {
+        const text = await readFileAsText(file);
+        
+        loadingText.textContent = 'レビューデータを解析中...';
+        loadingSub.textContent = '店舗情報を確認しています';
+        
+        const previewInfo = previewCSV(text);
+        
+        if (previewInfo.reviewCount === 0) {
+          showError('レビューデータが見つかりませんでした');
+          return;
+        }
+        
+        if (previewInfo.shopId) {
+          currentShopId = previewInfo.shopId;
+          
+          loadingText.textContent = `${previewInfo.reviewCount}件のレビューを検出`;
+          loadingSub.textContent = `店舗ID: ${previewInfo.shopId} の情報を取得中...`;
+          
+          const status = await callApi('getShopStatus', { shopId: previewInfo.shopId });
+          
+          const previewStatus = {
+            shopId: status.shopId,
+            shopName: status.shopName,
+            todayUsageCount: status.todayUsageCount + 1,
+            todayReviewCount: status.todayReviewCount + previewInfo.reviewCount,
+            limits: status.limits,
+            remaining: {
+              usageCount: Math.max(0, status.remaining.usageCount - 1),
+              reviewCount: Math.max(0, status.remaining.reviewCount - previewInfo.reviewCount)
+            }
+          };
+          
+          updateUsageDisplay(previewStatus);
+          
+          if (status.remaining.usageCount <= 0) {
+            showError('本日の利用回数上限に達しました。明日以降にご利用ください。');
+            return;
+          }
+          
+          if (status.remaining.reviewCount < previewInfo.reviewCount) {
+            showError(`本日のレビュー処理上限に近づいています。残り${status.remaining.reviewCount}件まで処理可能です。`);
+            return;
+          }
+          
+          currentShopName = status.shopName;
+        }
+        
+        dataInfo.classList.add('show');
+        const shopDisplay = currentShopName ? `${currentShopName}（${previewInfo.shopId}）` : `店舗ID: ${previewInfo.shopId || '不明'}`;
+        dataInfoText.textContent = `📊 ${previewInfo.reviewCount}件のレビューを検出（${shopDisplay}）`;
+        
+        loadingText.textContent = 'AIが分析中...';
+        loadingSub.textContent = 'レビューの深層を読み解いています';
+        
+        const result = await callApi('analyze', { csvText: text });
+        handleAnalyzeResult(result);
+        
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+    
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const bytes = new Uint8Array(e.target.result);
+          let text;
+          
+          if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+            text = new TextDecoder('utf-8').decode(bytes);
+          } else {
+            try {
+              text = new TextDecoder('shift-jis').decode(bytes);
+            } catch {
+              text = new TextDecoder('utf-8').decode(bytes);
+            }
+          }
+          resolve(text);
+        };
+        reader.onerror = () => reject(new Error('ファイル読み込みに失敗しました'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+    
+    function previewCSV(csvText) {
+      const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+      let reviewCount = 0;
+      let shopId = null;
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line.trim()) continue;
+        
+        const fields = line.split(',');
+        
+        if (fields.length >= 7 && fields[6] && fields[6].trim()) {
+          reviewCount++;
+        }
+        
+        if (!shopId && fields.length >= 9 && fields[8]) {
+          const orderNo = fields[8].replace(/"/g, '').trim();
+          const extracted = extractShopIdFromOrderNo(orderNo);
+          if (extracted) {
+            shopId = extracted;
+          }
+        }
+      }
+      
+      return { reviewCount, shopId };
+    }
+    
+    async function handleAnalyzeResult(result) {
+      if (result.error) {
+        showError(result.error);
+        return;
+      }
+      
+      if (result.shopId && !currentShopId) {
+        currentShopId = result.shopId;
+      }
+      
+      if (result.success) {
+        showReport(result);
+        return;
+      }
+      
+      if (result.requiresChunking) {
+        allReviews = result.reviews;
+        if (result.shopId) {
+          currentShopId = result.shopId;
+        }
+        await processInChunks(result.reviews, currentShopId);
+      }
+    }
+    
+    async function processInChunks(reviews, shopId) {
+      const totalCount = reviews.length;
+      const chunks = [];
+      
+      for (let i = 0; i < reviews.length; i += CHUNK_SIZE) {
+        chunks.push(reviews.slice(i, i + CHUNK_SIZE));
+      }
+      
+      const totalChunks = chunks.length;
+      
+      progressContainer.classList.add('show');
+      loadingText.textContent = `${totalCount}件のレビューを分析中...`;
+      loadingSub.textContent = `${totalChunks}回に分けて処理します`;
+      
+      const shopDisplay = currentShopName ? `${currentShopName}（${shopId}）` : `店舗ID: ${shopId || '不明'}`;
+      dataInfoText.textContent = `📊 ${totalCount}件のレビューを検出（${shopDisplay}）→ ${totalChunks}チャンクに分割`;
+      
+      const chunkResults = [];
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const progress = ((i) / totalChunks * 100).toFixed(0);
+        progressBar.style.width = progress + '%';
+        progressText.textContent = `チャンク ${i + 1}/${totalChunks} を分析中...`;
+        progressDetail.textContent = `${chunks[i].length}件のレビューを処理しています`;
+        
+        try {
+          const result = await callApi('analyzeChunk', {
+            reviews: chunks[i],
+            chunkIndex: i,
+            totalChunks: totalChunks,
+            shopId: shopId
+          });
+          
+          if (result.error) {
+            showError(`チャンク${i + 1}でエラー: ${result.error}`);
+            return;
+          }
+          
+          chunkResults.push(result);
+          
+        } catch (err) {
+          showError(`チャンク${i + 1}の処理に失敗: ${err.message}`);
+          return;
+        }
+      }
+      
+      progressBar.style.width = '100%';
+      progressText.textContent = '結果を統合中...';
+      
+      const mergedResult = mergeChunkResults(chunkResults, reviews);
+      mergedResult.shopId = shopId;
+      showReport(mergedResult);
+    }
+    
+    function mergeChunkResults(results, allReviews) {
+      let totalCount = 0;
+      let totalRatingSum = 0;
+      let totalRatingCount = 0;
+      const distribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
+      
+      results.forEach(r => {
+        totalCount += r.stats.count;
+        if (r.stats.avgRating !== '-') {
+          totalRatingSum += parseFloat(r.stats.avgRating) * r.stats.count;
+          totalRatingCount += r.stats.count;
+        }
+        for (let i = 1; i <= 5; i++) {
+          distribution[i] += r.stats.distribution[i] || 0;
+        }
+      });
+      
+      const allStrengths = [];
+      const allConcerns = [];
+      const allRecommendations = [];
+      const allMotivations = new Set();
+      const allScenarios = new Set();
+      const allTriggers = new Set();
+      const allSellingPoints = new Set();
+      const allKeywords = new Set();
+      const allQuotes = [];
+      
+      let totalPositive = 0, totalNeutral = 0, totalNegative = 0;
+      
+      results.forEach(r => {
+        const ai = r.aiAnalysis;
+        if (!ai) return;
+        
+        if (ai.summary?.sentiment_breakdown) {
+          totalPositive += ai.summary.sentiment_breakdown.positive_count || 0;
+          totalNeutral += ai.summary.sentiment_breakdown.neutral_count || 0;
+          totalNegative += ai.summary.sentiment_breakdown.negative_count || 0;
+        }
+        
+        (ai.strengths || []).forEach(s => allStrengths.push(s));
+        (ai.concerns || []).forEach(c => allConcerns.push(c));
+        (ai.recommendations || []).forEach(rec => allRecommendations.push(rec));
+        
+        if (ai.customer_insights) {
+          (ai.customer_insights.purchase_motivations || []).forEach(m => allMotivations.add(m));
+          (ai.customer_insights.usage_scenarios || []).forEach(s => allScenarios.add(s));
+          (ai.customer_insights.emotional_triggers || []).forEach(t => allTriggers.add(t));
+        }
+        
+        if (ai.marketing_suggestions) {
+          (ai.marketing_suggestions.key_selling_points || []).forEach(p => allSellingPoints.add(p));
+          (ai.marketing_suggestions.recommended_keywords || []).forEach(k => allKeywords.add(k));
+          (ai.marketing_suggestions.review_quotes_for_lp || []).forEach(q => allQuotes.push(q));
+        }
+      });
+      
+      return {
+        success: true,
+        stats: {
+          count: totalCount,
+          avgRating: totalRatingCount > 0 ? (totalRatingSum / totalRatingCount).toFixed(2) : '-',
+          distribution: distribution
+        },
+        aiAnalysis: {
+          summary: {
+            overall: `${totalCount}件のレビューを分析しました。ポジティブ${totalPositive}件、中立${totalNeutral}件、ネガティブ${totalNegative}件です。`,
+            sentiment_breakdown: {
+              positive_count: totalPositive,
+              neutral_count: totalNeutral,
+              negative_count: totalNegative
+            },
+            one_line: results[0]?.aiAnalysis?.summary?.one_line || '分析完了'
+          },
+          strengths: deduplicateByKey(allStrengths, 'point', 5),
+          concerns: deduplicateByKey(allConcerns, 'point', 5),
+          customer_insights: {
+            purchase_motivations: Array.from(allMotivations).slice(0, 5),
+            usage_scenarios: Array.from(allScenarios).slice(0, 5),
+            emotional_triggers: Array.from(allTriggers).slice(0, 5),
+            customer_profile: results[0]?.aiAnalysis?.customer_insights?.customer_profile || ''
+          },
+          recommendations: deduplicateByKey(allRecommendations, 'title', 5),
+          marketing_suggestions: {
+            key_selling_points: Array.from(allSellingPoints).slice(0, 5),
+            recommended_keywords: Array.from(allKeywords).slice(0, 8),
+            review_quotes_for_lp: allQuotes.slice(0, 3)
+          }
+        },
+        reviews: allReviews
+      };
+    }
+    
+    function deduplicateByKey(items, keyField, maxCount) {
+      const seen = new Map();
+      items.forEach(item => {
+        const key = item[keyField];
+        if (!seen.has(key)) {
+          seen.set(key, item);
+        }
+      });
+      return Array.from(seen.values()).slice(0, maxCount);
+    }
+    
+    async function refreshUsageStatus() {
+      if (currentShopId) {
+        const status = await callApi('getShopStatus', { shopId: currentShopId });
+        updateUsageDisplay(status);
+      }
+    }
+    
+    // ============================================
+    // レポート表示
+    // ============================================
+    function showReport(result) {
+      loading.classList.remove('show');
+      progressContainer.classList.remove('show');
+      stopTimer();
+      
+      if (result.error) {
+        showError(result.error);
+        return;
+      }
+      
+      if (result.shopId) {
+        currentShopId = result.shopId;
+      }
+      refreshUsageStatus();
+      
+      const stats = result.stats;
+      const ai = result.aiAnalysis;
+      allReviews = result.reviews || [];
+      
+      document.getElementById('summaryCard').innerHTML = `
+        <div class="summary-headline">${ai.summary?.one_line || '分析完了'}</div>
+        <div class="summary-text">${ai.summary?.overall || ''}</div>
+      `;
+      
+      const sent = ai.summary?.sentiment_breakdown || {};
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat-box">
+          <div class="stat-value">${stats.count}</div>
+          <div class="stat-label">レビュー数</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">${stats.avgRating}</div>
+          <div class="stat-label">平均評価</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">${stats.distribution[5]}</div>
+          <div class="stat-label">★5</div>
+        </div>
+      `;
+      
+      const total = (sent.positive_count || 0) + (sent.neutral_count || 0) + (sent.negative_count || 0) || 1;
+      const posP = ((sent.positive_count || 0) / total * 100).toFixed(0);
+      const neuP = ((sent.neutral_count || 0) / total * 100).toFixed(0);
+      const negP = ((sent.negative_count || 0) / total * 100).toFixed(0);
+      
+      document.getElementById('sentimentBar').innerHTML = `
+        <div style="margin-top:20px;">
+          <div style="font-size:13px;color:#888;margin-bottom:8px;">感情分布</div>
+          <div class="sentiment-bar">
+            <div class="sentiment-seg sentiment-pos" style="width:${posP}%">${sent.positive_count || 0}</div>
+            <div class="sentiment-seg sentiment-neu" style="width:${neuP}%">${sent.neutral_count || 0}</div>
+            <div class="sentiment-seg sentiment-neg" style="width:${negP}%">${sent.negative_count || 0}</div>
+          </div>
+          <div style="display:flex;justify-content:center;gap:20px;margin-top:10px;font-size:12px;color:#888;">
+            <span>🟢 ポジティブ</span><span>⚪ 中立</span><span>🔴 ネガティブ</span>
+          </div>
+        </div>
+      `;
+      
+      const strHtml = (ai.strengths || []).map(s => `
+        <div class="insight-item">
+          <div class="insight-header">
+            <div class="insight-icon good">✓</div>
+            <div class="insight-title">${s.point}</div>
+            <div class="insight-freq">${s.frequency || ''}</div>
+          </div>
+          <div class="insight-detail">${s.detail}</div>
+          ${s.evidence ? `<div class="insight-quote">${s.evidence}</div>` : ''}
+        </div>
+      `).join('') || '<p style="color:#888;padding:20px;">検出されませんでした</p>';
+      document.getElementById('strengthsList').innerHTML = strHtml;
+      
+      const conHtml = (ai.concerns || []).map(c => `
+        <div class="insight-item concern ${c.severity || ''}">
+          <div class="insight-header">
+            <div class="insight-icon ${c.severity === 'high' ? 'bad' : 'warn'}">!</div>
+            <div class="insight-title">${c.point}${c.is_indirect ? '<span class="indirect-badge">婉曲表現</span>' : ''}</div>
+          </div>
+          <div class="insight-detail">${c.detail}</div>
+          ${c.evidence ? `<div class="insight-quote">${c.evidence}</div>` : ''}
+        </div>
+      `).join('') || '<p style="color:#888;padding:20px;">特に懸念点は検出されませんでした 🎉</p>';
+      document.getElementById('concernsList').innerHTML = conHtml;
+      
+      const cust = ai.customer_insights || {};
+      document.getElementById('customerInsights').innerHTML = `
+        <div class="insight-grid">
+          <div class="insight-box">
+            <div class="insight-box-title">購入動機</div>
+            <div class="tag-list">
+              ${(cust.purchase_motivations || []).map(m => `<span class="tag">${m}</span>`).join('')}
+            </div>
+          </div>
+          <div class="insight-box">
+            <div class="insight-box-title">利用シーン</div>
+            <div class="tag-list">
+              ${(cust.usage_scenarios || []).map(s => `<span class="tag">${s}</span>`).join('')}
+            </div>
+          </div>
+          <div class="insight-box">
+            <div class="insight-box-title">感情トリガー</div>
+            <div class="tag-list">
+              ${(cust.emotional_triggers || []).map(t => `<span class="tag">${t}</span>`).join('')}
+            </div>
+          </div>
+          <div class="insight-box" style="grid-column: 1 / -1;">
+            <div class="insight-box-title">顧客像</div>
+            <div class="insight-box-content">${cust.customer_profile || '-'}</div>
+          </div>
+        </div>
+      `;
+      
+      const recHtml = (ai.recommendations || []).map(r => `
+        <div class="recommendation ${r.priority || ''}">
+          <div class="rec-header">
+            <span class="rec-priority ${r.priority || ''}">${{high:'優先度高',medium:'優先度中',low:'優先度低'}[r.priority] || r.priority}</span>
+            <span class="rec-category">${r.category || ''}</span>
+          </div>
+          <div class="rec-title">${r.title}</div>
+          <div class="rec-action">${r.action}</div>
+          ${r.expected_impact ? `<div class="rec-impact">📈 ${r.expected_impact}</div>` : ''}
+        </div>
+      `).join('');
+      document.getElementById('recommendations').innerHTML = recHtml;
+      
+      const mkt = ai.marketing_suggestions || {};
+      document.getElementById('marketingSuggestions').innerHTML = `
+        <div class="marketing-section">
+          <div class="marketing-title">💬 LPに使えるレビュー引用</div>
+          ${(mkt.review_quotes_for_lp || []).map(q => `<div class="quote-card">${q}</div>`).join('')}
+        </div>
+        <div class="marketing-section">
+          <div class="marketing-title">🎯 訴求ポイント</div>
+          <div class="tag-list">
+            ${(mkt.key_selling_points || []).map(p => `<span class="tag">${p}</span>`).join('')}
+          </div>
+        </div>
+        <div class="marketing-section">
+          <div class="marketing-title">🔑 推奨キーワード</div>
+          ${(mkt.recommended_keywords || []).map(k => `<span class="keyword-tag">${k}</span>`).join('')}
+        </div>
+      `;
+      
+      currentPage = 1;
+      renderReviewList();
+      
+      report.classList.add('show');
+    }
+    
+    function renderReviewList() {
+      const totalPages = Math.ceil(allReviews.length / reviewsPerPage);
+      const start = (currentPage - 1) * reviewsPerPage;
+      const end = start + reviewsPerPage;
+      const pageReviews = allReviews.slice(start, end);
+      
+      document.getElementById('reviewCountBadge').textContent = `全${allReviews.length}件`;
+      
+      const revHtml = pageReviews.map(r => {
+        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        const typeLabel = r.reviewType === 'ショップレビュー' ? 
+          '<span style="background:#3498db;color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">ショップ</span>' : 
+          '<span style="background:#27ae60;color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">商品</span>';
+        return `
+          <div class="review-item">
+            <div class="review-header">
+              <span class="review-stars">${stars}</span>
+              <span class="review-date">${r.date}</span>
+              ${typeLabel}
+            </div>
+            ${r.title && r.title !== '(タイトルなし)' ? `<div class="review-title">📌 ${esc(r.title)}</div>` : '<div class="review-title" style="color:#999;">(タイトルなし)</div>'}
+            <div class="review-body">${esc(r.body)}</div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('reviewList').innerHTML = revHtml;
+      
+      if (totalPages > 1) {
+        let pagHtml = '';
+        pagHtml += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>←</button>`;
+        
+        let startPage = Math.max(1, currentPage - 3);
+        let endPage = Math.min(totalPages, startPage + 6);
+        if (endPage - startPage < 6) {
+          startPage = Math.max(1, endPage - 6);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+          pagHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        
+        pagHtml += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>→</button>`;
+        pagHtml += `<span style="font-size:13px;color:#888;margin-left:10px;">${currentPage}/${totalPages}ページ</span>`;
+        
+        document.getElementById('reviewPagination').innerHTML = pagHtml;
+      } else {
+        document.getElementById('reviewPagination').innerHTML = '';
+      }
+    }
+    
+    function goToPage(page) {
+      const totalPages = Math.ceil(allReviews.length / reviewsPerPage);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderReviewList();
+      document.getElementById('reviewList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // ============================================
+    // エラー・リセット
+    // ============================================
+    function showError(msg) {
+      loading.classList.remove('show');
+      progressContainer.classList.remove('show');
+      stopTimer();
+      error.textContent = msg;
+      error.classList.add('show');
+      dropZone.style.display = 'block';
+    }
+    
+    function reset() {
+      report.classList.remove('show');
+      error.classList.remove('show');
+      dataInfo.classList.remove('show');
+      dropZone.style.display = 'block';
+      fileInput.value = '';
+      loadingTime.textContent = '0:00';
+      loadingText.textContent = 'AIが分析中...';
+      loadingSub.textContent = 'レビューの深層を読み解いています';
+      progressBar.style.width = '0%';
+      allReviews = [];
+      currentPage = 1;
+    }
+    
+    // ============================================
+    // タイマー
+    // ============================================
+    function startTimer() {
+      startTime = Date.now();
+      loadingTime.textContent = '0:00';
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+    
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+    
+    function updateTimer() {
+      if (!startTime) return;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      loadingTime.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // ============================================
+    // PDF出力
+    // ============================================
+    async function downloadPDF() {
+      const btn = pdfBtn;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '📄 PDF生成中...';
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const content = document.getElementById('pdfContent');
+        const pdfHeader = document.getElementById('pdfHeader');
+        
+        const now = new Date();
+        document.getElementById('pdfDate').textContent = 
+          `生成日時: ${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        pdfHeader.style.display = 'block';
+        
+        const originalBg = document.body.style.background;
+        document.body.style.background = '#fff';
+        content.style.background = '#fff';
+        content.style.padding = '20px';
+        
+        const canvas = await html2canvas(content, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+        
+        pdfHeader.style.display = 'none';
+        document.body.style.background = originalBg;
+        content.style.background = '';
+        content.style.padding = '';
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pdfWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        let heightLeft = imgHeight;
+        let position = 10;
+        
+        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - 20);
+        
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight + 10;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
+          heightLeft -= (pdfHeight - 20);
+        }
+        
+        const fileName = `レビュー分析レポート_${currentShopId || 'unknown'}_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}.pdf`;
+        pdf.save(fileName);
+        
+      } catch (e) {
+        console.error('PDF生成エラー:', e);
+        alert('PDF生成に失敗しました: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>
