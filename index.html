@@ -642,6 +642,126 @@
       .usage-bars { grid-template-columns: 1fr; }
       .stats-row { flex-direction: column; }
     }
+    
+    .csv-guide {
+      background: white;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .csv-guide-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .csv-guide-section {
+      margin-bottom: 18px;
+    }
+    
+    .csv-guide-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .csv-guide-section-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 10px;
+      padding-left: 10px;
+      border-left: 3px solid #667eea;
+    }
+    
+    .csv-guide-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .csv-guide-list li {
+      font-size: 13px;
+      color: #666;
+      padding: 6px 0 6px 20px;
+      position: relative;
+      line-height: 1.5;
+    }
+    
+    .csv-guide-list li::before {
+      content: '•';
+      position: absolute;
+      left: 6px;
+      color: #999;
+    }
+    
+    .csv-guide-warning {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    
+    .csv-guide-warning-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #f57c00;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .csv-guide-warning-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .csv-guide-warning-list li {
+      font-size: 13px;
+      color: #e65100;
+      padding: 5px 0 5px 20px;
+      position: relative;
+      line-height: 1.6;
+    }
+    
+    .csv-guide-warning-list li::before {
+      content: '⚠';
+      position: absolute;
+      left: 0;
+      font-size: 12px;
+    }
+    
+    .csv-guide-toggle {
+      background: none;
+      border: none;
+      color: #667eea;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: auto;
+    }
+    
+    .csv-guide-toggle:hover {
+      text-decoration: underline;
+    }
+    
+    .csv-guide-content {
+      display: none;
+    }
+    
+    .csv-guide-content.show {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -698,6 +818,54 @@
       <div class="drop-zone-hint" id="dropZoneHint">RMSからエクスポートしたCSVファイルに対応</div>
     </div>
     <input type="file" id="fileInput" accept=".csv">
+    
+    <!-- CSV説明・注意書き -->
+    <div class="csv-guide" id="csvGuide">
+      <div class="csv-guide-title">
+        📋 CSVファイルについて
+        <button class="csv-guide-toggle" id="csvGuideToggle" onclick="toggleCsvGuide()">
+          <span id="csvGuideToggleText">詳細を表示</span> ▼
+        </button>
+      </div>
+      
+      <div class="csv-guide-content" id="csvGuideContent">
+        <div class="csv-guide-section">
+          <div class="csv-guide-section-title">対応フォーマット</div>
+          <ul class="csv-guide-list">
+            <li>楽天RMS「R-Backoffice」からエクスポートしたレビューCSV</li>
+            <li>文字コード: Shift-JIS または UTF-8（自動判別）</li>
+          </ul>
+        </div>
+        
+        <div class="csv-guide-section">
+          <div class="csv-guide-section-title">読み取られる情報</div>
+          <ul class="csv-guide-list">
+            <li>レビュー種別（ショップレビュー / 商品レビュー）</li>
+            <li>評価（★1〜5）</li>
+            <li>レビュータイトル・本文</li>
+            <li>投稿日時</li>
+            <li>注文番号（店舗ID識別に使用）</li>
+          </ul>
+        </div>
+        
+        <div class="csv-guide-section">
+          <div class="csv-guide-section-title">処理上限</div>
+          <ul class="csv-guide-list">
+            <li>1回の分析: 最大1,000件</li>
+            <li>1日あたり: 最大10回 / 15,000件（店舗ごと）</li>
+          </ul>
+        </div>
+        
+        <div class="csv-guide-warning">
+          <div class="csv-guide-warning-title">⚠️ 正確な分析のための注意点</div>
+          <ul class="csv-guide-warning-list">
+            <li>ショップレビューと商品レビューが混在していても分析は実行されますが、<strong>正確な結果が得られません</strong>。種類を分けてアップロードしてください。</li>
+            <li>商品レビューを分析する場合は、<strong>同一商品のレビューに絞って</strong>ください。複数商品が混在すると、インサイトの精度が低下します。</li>
+            <li>レビュー件数が少なすぎる場合（10件未満）、統計的に有意な分析結果が得られない可能性があります。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
     
     <div class="data-info" id="dataInfo">
       <div class="data-info-text" id="dataInfoText"></div>
@@ -778,7 +946,8 @@
     // ============================================
     // 設定 - ここにGAS WebアプリのURLを設定
     // ============================================
-    const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxQ9jJAggQOJuwgaiSGW1YDeSTsWD2jn2EXPtyRDKKhWSRG3FoMUrbx_-h17CFxYoagrQ/exec';
+    const API_BASE_URL = 'YOUR_GAS_WEBAPP_URL_HERE';
+    // 例: 'https://script.google.com/macros/s/AKfycb.../exec'
     
     // ============================================
     // DOM要素
@@ -1538,6 +1707,25 @@
       progressBar.style.width = '0%';
       allReviews = [];
       currentPage = 1;
+    }
+    
+    // ============================================
+    // CSVガイド表示切替
+    // ============================================
+    function toggleCsvGuide() {
+      const content = document.getElementById('csvGuideContent');
+      const toggleText = document.getElementById('csvGuideToggleText');
+      const toggle = document.getElementById('csvGuideToggle');
+      
+      if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        toggleText.textContent = '詳細を表示';
+        toggle.innerHTML = '<span id="csvGuideToggleText">詳細を表示</span> ▼';
+      } else {
+        content.classList.add('show');
+        toggleText.textContent = '閉じる';
+        toggle.innerHTML = '<span id="csvGuideToggleText">閉じる</span> ▲';
+      }
     }
     
     // ============================================
