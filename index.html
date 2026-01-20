@@ -762,6 +762,238 @@
     .csv-guide-content.show {
       display: block;
     }
+    
+    /* ============================================
+       薬機法チェック関連スタイル
+       ============================================ */
+    .yakujiho-card {
+      background: white;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 2px solid #ff9800;
+    }
+    
+    .yakujiho-card.safe {
+      border-color: #4caf50;
+    }
+    
+    .yakujiho-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .yakujiho-icon {
+      font-size: 28px;
+    }
+    
+    .yakujiho-title {
+      font-size: 17px;
+      font-weight: bold;
+      color: #1a1a2e;
+    }
+    
+    .yakujiho-badge {
+      margin-left: auto;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    
+    .yakujiho-badge.warning {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .yakujiho-badge.safe {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .yakujiho-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .yakujiho-stat {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .yakujiho-stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #e65100;
+    }
+    
+    .yakujiho-stat-value.safe {
+      color: #2e7d32;
+    }
+    
+    .yakujiho-stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+    
+    .yakujiho-section {
+      margin-bottom: 20px;
+    }
+    
+    .yakujiho-section-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 12px;
+      padding-left: 10px;
+      border-left: 3px solid #ff9800;
+    }
+    
+    .yakujiho-word-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .yakujiho-word {
+      background: #ffebee;
+      color: #c62828;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .yakujiho-word-count {
+      background: rgba(198, 40, 40, 0.2);
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+    }
+    
+    .yakujiho-review-item {
+      background: #fff8f8;
+      border: 1px solid #ffcdd2;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+    }
+    
+    .yakujiho-review-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .yakujiho-review-badge {
+      background: #ffebee;
+      color: #c62828;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    
+    .yakujiho-review-ai-badge {
+      background: #e3f2fd;
+      color: #1565c0;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    
+    .yakujiho-review-text {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.7;
+    }
+    
+    .yakujiho-highlight {
+      background: #ffeb3b;
+      color: #c62828;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    
+    .yakujiho-ai-judgment {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #1565c0;
+    }
+    
+    .yakujiho-ai-judgment.problem {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .yakujiho-ai-judgment.ok {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .yakujiho-toggle {
+      background: none;
+      border: 1px solid #ff9800;
+      color: #ff9800;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    
+    .yakujiho-toggle:hover {
+      background: #ff9800;
+      color: white;
+    }
+    
+    .yakujiho-details {
+      display: none;
+    }
+    
+    .yakujiho-details.show {
+      display: block;
+    }
+    
+    .review-item.has-yakujiho-warning {
+      border: 2px solid #ff9800;
+      background: #fffde7;
+    }
+    
+    .review-yakujiho-badge {
+      background: #ff9800;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+
+    /* NGワードハイライト用 */
+    .ng-word-highlight {
+      background: linear-gradient(180deg, transparent 60%, #ffeb3b 60%);
+      color: #c62828;
+      font-weight: bold;
+      padding: 0 2px;
+    }
   </style>
 </head>
 <body>
@@ -897,6 +1129,33 @@
         
         <div class="summary-card" id="summaryCard"></div>
         
+        <!-- 薬機法チェックカード（新規追加） -->
+        <div class="yakujiho-card" id="yakujihoCard" style="display:none;">
+          <div class="yakujiho-header">
+            <div class="yakujiho-icon">💊</div>
+            <div class="yakujiho-title">薬機法チェック</div>
+            <div class="yakujiho-badge warning" id="yakujihoBadge">要確認</div>
+          </div>
+          
+          <div class="yakujiho-summary" id="yakujihoSummary"></div>
+          
+          <button class="yakujiho-toggle" onclick="toggleYakujihoDetails()">
+            詳細を表示 ▼
+          </button>
+          
+          <div class="yakujiho-details" id="yakujihoDetails">
+            <div class="yakujiho-section">
+              <div class="yakujiho-section-title">検出されたNGワード</div>
+              <div class="yakujiho-word-list" id="yakujihoWordList"></div>
+            </div>
+            
+            <div class="yakujiho-section">
+              <div class="yakujiho-section-title">該当レビュー一覧</div>
+              <div id="yakujihoReviewList"></div>
+            </div>
+          </div>
+        </div>
+        
         <div class="card">
           <div class="card-title">📈 基本統計</div>
           <div class="stats-row" id="statsRow"></div>
@@ -947,7 +1206,161 @@
     // 設定 - ここにGAS WebアプリのURLを設定
     // ============================================
     const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxQ9jJAggQOJuwgaiSGW1YDeSTsWD2jn2EXPtyRDKKhWSRG3FoMUrbx_-h17CFxYoagrQ/exec';
-    // 例: 'https://script.google.com/macros/s/AKfycb.../exec'
+    
+    // ============================================
+    // 薬機法NGワードリスト
+    // ============================================
+    const YAKUJIHO_NG_WORDS = {
+      // 効能効果系（高リスク）
+      highRisk: [
+        '治る', '治った', '治ります', '治せる', '治療',
+        '効く', '効いた', '効きます', '効果がある', '効果があった', '効果的',
+        '改善', '改善した', '改善される',
+        '予防', '予防できる', '予防効果',
+        '解消', '解消した', '解消される',
+        '緩和', '緩和した', '緩和される',
+        '抑制', '抑制する', '抑制効果',
+        '促進', '促進する', '促進効果',
+        '活性化', '活性化する',
+        '殺菌', '除菌', '抗菌',
+        '免疫力アップ', '免疫力向上', '免疫強化',
+        '代謝アップ', '代謝向上', '代謝促進',
+        '血行促進', '血流改善',
+        '若返り', 'アンチエイジング', '老化防止',
+        'デトックス', '毒素排出',
+        '脂肪燃焼', '脂肪分解',
+        '痩せる', '痩せた', 'ダイエット効果',
+      ],
+      // 疾病名（中リスク）
+      mediumRisk: [
+        'がん', '癌', 'ガン',
+        '糖尿病', '高血圧', '低血圧',
+        'アトピー', 'アレルギー', '花粉症',
+        '認知症', 'アルツハイマー',
+        'うつ', '鬱', 'うつ病',
+        '不眠', '不眠症', '睡眠障害',
+        '便秘', '下痢', '胃炎', '胃潰瘍',
+        '関節炎', 'リウマチ', '腰痛', '肩こり',
+        '頭痛', '偏頭痛', 'めまい',
+        '貧血', '冷え性', '更年期',
+        'ニキビ', '肌荒れ', 'シミ', 'シワ', 'たるみ',
+        '薄毛', '抜け毛', 'ハゲ',
+        'ED', '勃起不全',
+      ],
+      // 身体変化系（中リスク）
+      bodyChange: [
+        '血圧が下がる', '血圧が上がる', '血圧が安定',
+        '血糖値が下がる', '血糖値が安定', '血糖値コントロール',
+        'コレステロールが下がる', 'コレステロール値',
+        '中性脂肪', '内臓脂肪',
+        '尿酸値', '肝機能', '腎機能',
+        'ホルモンバランス', '自律神経',
+        '体温が上がる', '基礎体温',
+        '筋肉が増える', '筋肉増強',
+      ],
+      // 医療系表現（高リスク）
+      medical: [
+        '医師推奨', '医者が勧める', 'ドクター推奨',
+        '臨床試験', '臨床データ', '医学的',
+        '診断', '処方',
+        '薬', '医薬品', '医療機器',
+        '特許成分', '独自成分',
+      ],
+      // 誇大表現（低リスク・要注意）
+      exaggeration: [
+        '絶対', '確実に', '必ず', '100%',
+        '即効', '即座に', 'すぐに効く',
+        '奇跡', '驚異', '画期的', '革命的',
+        '世界初', '業界初', '日本初',
+        '最強', '最高', '究極', 'No.1', 'ナンバーワン',
+      ]
+    };
+    
+    // 全NGワードをフラット化（検索用）
+    const ALL_NG_WORDS = [
+      ...YAKUJIHO_NG_WORDS.highRisk,
+      ...YAKUJIHO_NG_WORDS.mediumRisk,
+      ...YAKUJIHO_NG_WORDS.bodyChange,
+      ...YAKUJIHO_NG_WORDS.medical,
+      ...YAKUJIHO_NG_WORDS.exaggeration
+    ];
+    
+    // ============================================
+    // 薬機法チェック関数
+    // ============================================
+    function checkYakujihoNgWords(text) {
+      if (!text) return { words: [], highlighted: text };
+      
+      const foundWords = [];
+      let highlightedText = text;
+      
+      // 各NGワードをチェック
+      ALL_NG_WORDS.forEach(word => {
+        const regex = new RegExp(word, 'gi');
+        const matches = text.match(regex);
+        if (matches) {
+          foundWords.push({
+            word: word,
+            count: matches.length,
+            risk: getWordRiskLevel(word)
+          });
+          // ハイライト用にマーク
+          highlightedText = highlightedText.replace(regex, `<span class="ng-word-highlight">${word}</span>`);
+        }
+      });
+      
+      return { words: foundWords, highlighted: highlightedText };
+    }
+    
+    function getWordRiskLevel(word) {
+      if (YAKUJIHO_NG_WORDS.highRisk.includes(word)) return 'high';
+      if (YAKUJIHO_NG_WORDS.medical.includes(word)) return 'high';
+      if (YAKUJIHO_NG_WORDS.mediumRisk.includes(word)) return 'medium';
+      if (YAKUJIHO_NG_WORDS.bodyChange.includes(word)) return 'medium';
+      return 'low';
+    }
+    
+    function analyzeYakujihoForReviews(reviews) {
+      const result = {
+        totalWarnings: 0,
+        reviewsWithWarnings: [],
+        wordCounts: {},
+        highRiskCount: 0,
+        mediumRiskCount: 0,
+        lowRiskCount: 0
+      };
+      
+      reviews.forEach((review, index) => {
+        const textToCheck = `${review.title || ''} ${review.body || ''}`;
+        const check = checkYakujihoNgWords(textToCheck);
+        
+        if (check.words.length > 0) {
+          result.totalWarnings++;
+          
+          // リスクレベル別カウント
+          check.words.forEach(w => {
+            if (w.risk === 'high') result.highRiskCount++;
+            else if (w.risk === 'medium') result.mediumRiskCount++;
+            else result.lowRiskCount++;
+            
+            // ワード別カウント
+            if (!result.wordCounts[w.word]) {
+              result.wordCounts[w.word] = { count: 0, risk: w.risk };
+            }
+            result.wordCounts[w.word].count += w.count;
+          });
+          
+          result.reviewsWithWarnings.push({
+            index: index,
+            review: review,
+            ngWords: check.words,
+            highlightedText: check.highlighted
+          });
+        }
+      });
+      
+      return result;
+    }
     
     // ============================================
     // DOM要素
@@ -983,6 +1396,10 @@
     let currentShopName = null;
     const CHUNK_SIZE = 200;
     
+    // 薬機法チェック結果を保持
+    let yakujihoResult = null;
+    let aiYakujihoResult = null;
+    
     // ============================================
     // API呼び出し関数
     // ============================================
@@ -990,7 +1407,7 @@
       const payload = { 
         action, 
         ...params,
-        _referer: window.location.href  // リファラー情報を追加
+        _referer: window.location.href
       };
       
       try {
@@ -1004,7 +1421,6 @@
         
         const data = await response.json();
         
-        // ドメイン認証エラーのチェック
         if (data.code === 'UNAUTHORIZED_DOMAIN') {
           throw new Error('このドメインからのアクセスは許可されていません');
         }
@@ -1020,7 +1436,6 @@
     // 初期化
     // ============================================
     async function init() {
-      // API接続確認
       try {
         connectionStatus.className = 'connection-status checking';
         connectionStatus.textContent = '🔄 接続確認中...';
@@ -1035,7 +1450,6 @@
           }, 3000);
         }
         
-        // APIキー確認
         const keyCheck = await callApi('checkApiKey');
         if (!keyCheck.hasKey) {
           apiNotice.classList.add('show');
@@ -1131,6 +1545,21 @@
     
     function esc(str) {
       return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+    
+    // NGワードをハイライトしてエスケープ
+    function escWithHighlight(str, ngWords) {
+      if (!str) return '';
+      let escaped = esc(str);
+      
+      if (ngWords && ngWords.length > 0) {
+        ngWords.forEach(w => {
+          const regex = new RegExp(w.word, 'gi');
+          escaped = escaped.replace(regex, `<span class="ng-word-highlight">${w.word}</span>`);
+        });
+      }
+      
+      return escaped;
     }
     
     // ============================================
@@ -1402,6 +1831,9 @@
       
       let totalPositive = 0, totalNeutral = 0, totalNegative = 0;
       
+      // AI薬機法チェック結果をマージ
+      const mergedYakujihoAi = [];
+      
       results.forEach(r => {
         const ai = r.aiAnalysis;
         if (!ai) return;
@@ -1426,6 +1858,11 @@
           (ai.marketing_suggestions.key_selling_points || []).forEach(p => allSellingPoints.add(p));
           (ai.marketing_suggestions.recommended_keywords || []).forEach(k => allKeywords.add(k));
           (ai.marketing_suggestions.review_quotes_for_lp || []).forEach(q => allQuotes.push(q));
+        }
+        
+        // AI薬機法チェック結果
+        if (ai.yakujiho_check) {
+          mergedYakujihoAi.push(...(ai.yakujiho_check || []));
         }
       });
       
@@ -1459,7 +1896,8 @@
             key_selling_points: Array.from(allSellingPoints).slice(0, 5),
             recommended_keywords: Array.from(allKeywords).slice(0, 8),
             review_quotes_for_lp: allQuotes.slice(0, 3)
-          }
+          },
+          yakujiho_check: mergedYakujihoAi
         },
         reviews: allReviews
       };
@@ -1484,6 +1922,132 @@
     }
     
     // ============================================
+    // 薬機法チェック表示
+    // ============================================
+    function toggleYakujihoDetails() {
+      const details = document.getElementById('yakujihoDetails');
+      const btn = document.querySelector('.yakujiho-toggle');
+      
+      if (details.classList.contains('show')) {
+        details.classList.remove('show');
+        btn.textContent = '詳細を表示 ▼';
+      } else {
+        details.classList.add('show');
+        btn.textContent = '詳細を閉じる ▲';
+      }
+    }
+    
+    function renderYakujihoCard(result, aiResult) {
+      const card = document.getElementById('yakujihoCard');
+      const badge = document.getElementById('yakujihoBadge');
+      const summary = document.getElementById('yakujihoSummary');
+      const wordList = document.getElementById('yakujihoWordList');
+      const reviewList = document.getElementById('yakujihoReviewList');
+      
+      if (!result || result.totalWarnings === 0) {
+        // 問題なし
+        card.style.display = 'block';
+        card.classList.add('safe');
+        badge.className = 'yakujiho-badge safe';
+        badge.textContent = '問題なし';
+        
+        summary.innerHTML = `
+          <div class="yakujiho-stat">
+            <div class="yakujiho-stat-value safe">0</div>
+            <div class="yakujiho-stat-label">警告レビュー数</div>
+          </div>
+          <div class="yakujiho-stat">
+            <div class="yakujiho-stat-value safe">✓</div>
+            <div class="yakujiho-stat-label">チェック完了</div>
+          </div>
+        `;
+        
+        document.querySelector('.yakujiho-toggle').style.display = 'none';
+        return;
+      }
+      
+      // 問題あり
+      card.style.display = 'block';
+      card.classList.remove('safe');
+      badge.className = 'yakujiho-badge warning';
+      badge.textContent = `${result.totalWarnings}件の警告`;
+      
+      summary.innerHTML = `
+        <div class="yakujiho-stat">
+          <div class="yakujiho-stat-value">${result.totalWarnings}</div>
+          <div class="yakujiho-stat-label">警告レビュー数</div>
+        </div>
+        <div class="yakujiho-stat">
+          <div class="yakujiho-stat-value">${result.highRiskCount}</div>
+          <div class="yakujiho-stat-label">高リスク表現</div>
+        </div>
+        <div class="yakujiho-stat">
+          <div class="yakujiho-stat-value">${result.mediumRiskCount}</div>
+          <div class="yakujiho-stat-label">中リスク表現</div>
+        </div>
+        <div class="yakujiho-stat">
+          <div class="yakujiho-stat-value">${result.lowRiskCount}</div>
+          <div class="yakujiho-stat-label">注意表現</div>
+        </div>
+      `;
+      
+      // NGワードリスト
+      const sortedWords = Object.entries(result.wordCounts)
+        .sort((a, b) => {
+          const riskOrder = { high: 0, medium: 1, low: 2 };
+          if (riskOrder[a[1].risk] !== riskOrder[b[1].risk]) {
+            return riskOrder[a[1].risk] - riskOrder[b[1].risk];
+          }
+          return b[1].count - a[1].count;
+        });
+      
+      wordList.innerHTML = sortedWords.map(([word, info]) => `
+        <div class="yakujiho-word">
+          ${word}
+          <span class="yakujiho-word-count">${info.count}回</span>
+        </div>
+      `).join('');
+      
+      // 該当レビューリスト
+      let reviewHtml = '';
+      result.reviewsWithWarnings.forEach(item => {
+        const stars = '★'.repeat(item.review.rating) + '☆'.repeat(5 - item.review.rating);
+        
+        // AI判定結果を探す
+        let aiJudgment = null;
+        if (aiResult && aiResult.length > 0) {
+          aiJudgment = aiResult.find(ai => 
+            ai.review_text && item.review.body && 
+            ai.review_text.includes(item.review.body.substring(0, 30))
+          );
+        }
+        
+        reviewHtml += `
+          <div class="yakujiho-review-item">
+            <div class="yakujiho-review-header">
+              <span class="review-stars">${stars}</span>
+              <span class="review-date">${item.review.date}</span>
+              <span class="yakujiho-review-badge">⚠️ ${item.ngWords.length}件のNGワード</span>
+              ${aiJudgment ? `<span class="yakujiho-review-ai-badge">🤖 AI判定あり</span>` : ''}
+            </div>
+            ${item.review.title && item.review.title !== '(タイトルなし)' ? 
+              `<div class="review-title">📌 ${escWithHighlight(item.review.title, item.ngWords)}</div>` : ''}
+            <div class="yakujiho-review-text">${escWithHighlight(item.review.body, item.ngWords)}</div>
+            ${aiJudgment ? `
+              <div class="yakujiho-ai-judgment ${aiJudgment.is_problematic ? 'problem' : 'ok'}">
+                <strong>🤖 AI判定:</strong> ${aiJudgment.is_problematic ? '⚠️ 問題の可能性あり' : '✓ 文脈的に問題なし'}<br>
+                ${aiJudgment.reason || ''}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      reviewList.innerHTML = reviewHtml;
+      document.querySelector('.yakujiho-toggle').style.display = 'block';
+    }
+    
+    // ============================================
     // レポート表示
     // ============================================
     function showReport(result) {
@@ -1504,6 +2068,13 @@
       const stats = result.stats;
       const ai = result.aiAnalysis;
       allReviews = result.reviews || [];
+      
+      // フロントエンドで薬機法NGワードチェック実行
+      yakujihoResult = analyzeYakujihoForReviews(allReviews);
+      aiYakujihoResult = ai.yakujiho_check || null;
+      
+      // 薬機法チェックカード表示
+      renderYakujihoCard(yakujihoResult, aiYakujihoResult);
       
       document.getElementById('summaryCard').innerHTML = `
         <div class="summary-headline">${ai.summary?.one_line || '分析完了'}</div>
@@ -1643,20 +2214,32 @@
       
       document.getElementById('reviewCountBadge').textContent = `全${allReviews.length}件`;
       
-      const revHtml = pageReviews.map(r => {
+      const revHtml = pageReviews.map((r, idx) => {
+        const globalIndex = start + idx;
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
         const typeLabel = r.reviewType === 'ショップレビュー' ? 
           '<span style="background:#3498db;color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">ショップ</span>' : 
           '<span style="background:#27ae60;color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:8px;">商品</span>';
+        
+        // 薬機法警告チェック
+        const yakujihoWarning = yakujihoResult?.reviewsWithWarnings.find(w => w.index === globalIndex);
+        const hasWarning = !!yakujihoWarning;
+        const warningClass = hasWarning ? 'has-yakujiho-warning' : '';
+        const warningBadge = hasWarning ? '<span class="review-yakujiho-badge">⚠️薬機法</span>' : '';
+        
+        // NGワードがあればハイライト
+        const ngWords = yakujihoWarning?.ngWords || [];
+        
         return `
-          <div class="review-item">
+          <div class="review-item ${warningClass}">
             <div class="review-header">
               <span class="review-stars">${stars}</span>
               <span class="review-date">${r.date}</span>
               ${typeLabel}
+              ${warningBadge}
             </div>
-            ${r.title && r.title !== '(タイトルなし)' ? `<div class="review-title">📌 ${esc(r.title)}</div>` : '<div class="review-title" style="color:#999;">(タイトルなし)</div>'}
-            <div class="review-body">${esc(r.body)}</div>
+            ${r.title && r.title !== '(タイトルなし)' ? `<div class="review-title">📌 ${escWithHighlight(r.title, ngWords)}</div>` : '<div class="review-title" style="color:#999;">(タイトルなし)</div>'}
+            <div class="review-body">${escWithHighlight(r.body, ngWords)}</div>
           </div>
         `;
       }).join('');
@@ -1717,6 +2300,12 @@
       progressBar.style.width = '0%';
       allReviews = [];
       currentPage = 1;
+      yakujihoResult = null;
+      aiYakujihoResult = null;
+      
+      // 薬機法カードをリセット
+      document.getElementById('yakujihoCard').style.display = 'none';
+      document.getElementById('yakujihoDetails').classList.remove('show');
     }
     
     // ============================================
@@ -1781,6 +2370,13 @@
           `生成日時: ${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
         pdfHeader.style.display = 'block';
         
+        // 薬機法カードの詳細を開いてPDFに含める
+        const yakujihoDetails = document.getElementById('yakujihoDetails');
+        const wasYakujihoOpen = yakujihoDetails.classList.contains('show');
+        if (!wasYakujihoOpen && yakujihoResult && yakujihoResult.totalWarnings > 0) {
+          yakujihoDetails.classList.add('show');
+        }
+        
         const originalBg = document.body.style.background;
         document.body.style.background = '#fff';
         content.style.background = '#fff';
@@ -1797,6 +2393,11 @@
         document.body.style.background = originalBg;
         content.style.background = '';
         content.style.padding = '';
+        
+        // 薬機法詳細を元に戻す
+        if (!wasYakujihoOpen) {
+          yakujihoDetails.classList.remove('show');
+        }
         
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         const pdf = new jsPDF('p', 'mm', 'a4');
