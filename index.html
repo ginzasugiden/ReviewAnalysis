@@ -1614,6 +1614,9 @@
     });
     
     async function processFile(file) {
+      // 薬機法チェックオプションの状態を取得
+      const yakujihoEnabled = document.getElementById('yakujihoCheckEnabled').checked;
+      
       if (!file.name.toLowerCase().endsWith('.csv')) {
         showError('CSVファイルを選択してください');
         return;
@@ -1684,7 +1687,10 @@
         loadingText.textContent = 'AIが分析中...';
         loadingSub.textContent = 'レビューの深層を読み解いています';
         
-        const result = await callApi('analyze', { csvText: text });
+        const result = await callApi('analyze', { 
+          csvText: text,
+          yakujihoCheckEnabled: yakujihoEnabled 
+        });
         handleAnalyzeResult(result);
         
       } catch (err) {
@@ -1796,7 +1802,8 @@
             reviews: chunks[i],
             chunkIndex: i,
             totalChunks: totalChunks,
-            shopId: shopId
+            shopId: shopId,
+            yakujihoCheckEnabled: yakujihoEnabled
           });
           
           if (result.error) {
@@ -2087,12 +2094,19 @@
       const ai = result.aiAnalysis;
       allReviews = result.reviews || [];
       
-      // フロントエンドで薬機法NGワードチェック実行
-      yakujihoResult = analyzeYakujihoForReviews(allReviews);
-      aiYakujihoResult = ai.yakujiho_check || null;
-      
-      // 薬機法チェックカード表示
-      renderYakujihoCard(yakujihoResult, aiYakujihoResult);
+      // 薬機法チェックが有効な場合のみ実行
+      const yakujihoEnabled = document.getElementById('yakujihoCheckEnabled').checked;
+      if (yakujihoEnabled) {
+        // フロントエンドで薬機法NGワードチェック実行
+        yakujihoResult = analyzeYakujihoForReviews(allReviews);
+        aiYakujihoResult = ai.yakujiho_check || null;
+        
+        // 薬機法チェックカード表示
+        renderYakujihoCard(yakujihoResult, aiYakujihoResult);
+      } else {
+        // 薬機法チェック無効時はカードを非表示
+        document.getElementById('yakujihoCard').style.display = 'none';
+      }
       
       document.getElementById('summaryCard').innerHTML = `
         <div class="summary-headline">${ai.summary?.one_line || '分析完了'}</div>
@@ -2324,6 +2338,9 @@
       // 薬機法カードをリセット
       document.getElementById('yakujihoCard').style.display = 'none';
       document.getElementById('yakujihoDetails').classList.remove('show');
+      
+      // 薬機法チェックボックスをリセット
+      document.getElementById('yakujihoCheckEnabled').checked = false;
     }
     
     // ============================================
